@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software (code, synthetic datasets, or benchmark design), please cite it."
+title: "PorousPromptBO: Text-informed active learning for porous organic materials"
+type: software
+authors:
+  - family-names: "Beycan"
+    given-names: "Burhan"
+date-released: "2026-02-27"
+repository-code: "https://github.com/<your-username>/porouspromptbo"
+license: MIT
+keywords:
+  - active learning
+  - porous organic materials
+  - covalent organic frameworks
+  - conjugated microporous polymers
+  - literature-informed optimisation

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PorousPromptBO | Interactive Porous‑Material Predictor</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <h1>PorousPromptBO</h1>
+        <p>
+          Live, browser‑side demo: choose building blocks + conditions and predict porous‑material outcomes.
+          Includes a simple “suggest next experiment” button to mimic feasibility‑aware active learning.
+        </p>
+        <p class="muted">
+          Repo: <a id="repoLink" href="#">https://github.com/&lt;your-username&gt;/porouspromptbo</a>
+        </p>
+
+        <div class="stats">
+          <div class="stat"><div class="num" id="statN">—</div><div class="lbl">Simulated experiments</div></div>
+          <div class="stat"><div class="num" id="statBlocks">—</div><div class="lbl">Building blocks</div></div>
+          <div class="stat"><div class="num">6</div><div class="lbl">Inputs</div></div>
+          <div class="stat"><div class="num" id="statR2">—</div><div class="lbl">Median R² (test)</div></div>
+        </div>
+
+        <div class="nav">
+          <a href="#predictor">⚡ Predictor</a>
+          <a href="#dataset">Database</a>
+          <a href="#about">About</a>
+        </div>
+      </div>
+
+      <div class="badges">
+        <div class="badge">Active Learning</div>
+        <div class="badge">Porous Materials</div>
+        <div class="badge">Text Constraints</div>
+      </div>
+    </div>
+
+    <div id="predictor" class="card">
+      <h2>Outcome Predictor</h2>
+      <p class="muted">
+        This page runs a small ridge surrogate trained on the repo’s porous-material simulator (for instant in-browser inference).
+        In a real workflow, replace the simulator with measured outcomes from synthesis + characterisation.
+      </p>
+
+      <div class="grid2">
+        <div class="panel">
+          <h3 style="margin:0 0 6px">Building blocks</h3>
+
+          <div class="control">
+            <label for="block_A">Block A <span class="val" id="block_A_val">—</span></label>
+            <select id="block_A"></select>
+          </div>
+
+          <div class="control">
+            <label for="block_B">Block B <span class="val" id="block_B_val">—</span></label>
+            <select id="block_B"></select>
+          </div>
+
+          <div class="modelinfo" id="blockInfo">Loading blocks…</div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 6px">Conditions</h3>
+
+          <div class="control">
+            <label for="solvent">Solvent <span class="val" id="solvent_val">—</span></label>
+            <select id="solvent"></select>
+          </div>
+
+          <div class="control">
+            <label for="catalyst">Catalyst <span class="val" id="catalyst_val">—</span></label>
+            <select id="catalyst"></select>
+          </div>
+
+          <div class="control">
+            <label for="temperature_C">Temperature (°C) <span class="val" id="temperature_C_val">—</span></label>
+            <input type="range" id="temperature_C"/>
+          </div>
+
+          <div class="control">
+            <label for="concentration_M">Concentration (M) <span class="val" id="concentration_M_val">—</span></label>
+            <input type="range" id="concentration_M"/>
+          </div>
+
+          <div class="actions">
+            <button id="predictBtn">Predict</button>
+            <button id="suggestBtn">Suggest next experiment</button>
+            <button id="resetBtn" class="secondary">Reset</button>
+          </div>
+
+          <div class="modelinfo" id="modelInfo">Loading model…</div>
+        </div>
+      </div>
+
+      <div class="outputs">
+        <div class="outCard">
+          <div class="outName">Yield</div>
+          <div class="outVal" id="out_yield_pct">—</div>
+          <div class="outUnit">%</div>
+        </div>
+        <div class="outCard">
+          <div class="outName">Surface area</div>
+          <div class="outVal" id="out_surface_area_m2_g">—</div>
+          <div class="outUnit">m²/g</div>
+        </div>
+        <div class="outCard">
+          <div class="outName">Crystallinity</div>
+          <div class="outVal" id="out_crystallinity_score">—</div>
+          <div class="outUnit">0–1</div>
+        </div>
+        <div class="outCard">
+          <div class="outName">Heuristic score</div>
+          <div class="outVal" id="out_score">—</div>
+          <div class="outUnit">higher is better</div>
+          <div class="outHint">Used only for the demo “suggest” button.</div>
+        </div>
+      </div>
+
+      <p class="muted" style="margin-top:12px">
+        Tip: the demo “suggest” button prefers high surface area & crystallinity while keeping yield acceptable.
+      </p>
+    </div>
+
+    <div id="dataset" class="card">
+      <h2>Database (simulated)</h2>
+      <p class="muted">
+        A small simulated dataset (designs + outcomes) used for training and UI demonstration.
+      </p>
+
+      <div class="search">
+        <input id="filterInput" type="text" placeholder="Filter by block id (e.g., BB012) or solvent (e.g., dmf)…"/>
+        <button id="filterBtn" class="secondary">Filter</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="expTable">
+          <thead>
+            <tr>
+              <th>block_A</th>
+              <th>block_B</th>
+              <th>solvent</th>
+              <th>catalyst</th>
+              <th>T (°C)</th>
+              <th>C (M)</th>
+              <th>yield (%)</th>
+              <th>SA (m²/g)</th>
+              <th>cryst</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p class="muted" style="margin-top:10px">
+        Raw JSON used on this page: <a href="assets/experiments.json">experiments.json</a> · <a href="assets/building_blocks.json">building_blocks.json</a>
+      </p>
+    </div>
+
+    <div id="about" class="card">
+      <h2>About</h2>
+      <p class="muted">
+        In the Cooper Group context, this pattern maps cleanly onto porous organic cages/CMPs/COFs: the optimiser proposes discrete building-block choices and continuous reaction conditions,
+        while feasibility constraints (from lab experience + literature) reduce failed experiments.
+      </p>
+      <ul>
+        <li><b>Feasibility-aware AL:</b> integrate text-derived constraints (temperature windows, solvent exclusions, “never works” pairs).</li>
+        <li><b>Multi-objective:</b> treat yield/quality/surface area as competing targets; adopt Pareto or scalarised acquisition.</li>
+        <li><b>Closed loop:</b> connect to robotics for synthesis + automated characterisation (PXRD, gas sorption, microscopy).</li>
+      </ul>
+      <p class="muted">
+        Enable GitHub Pages: <span class="code">Settings → Pages → Deploy from branch → /docs</span>.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p class="muted">MIT license. See <span class="code">CITATION.cff</span> for how to cite this software.</p>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
